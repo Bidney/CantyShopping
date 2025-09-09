@@ -6,11 +6,11 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
@@ -28,10 +28,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.rememberLazyListState
+import kotlinx.coroutines.delay
 import com.example.cantyshopping.ui.theme.YourShoppingListTheme
 import kotlinx.coroutines.launch
 
@@ -128,6 +131,12 @@ fun ShoppingListScreen(
     var selectedCategory by remember { mutableStateOf(GroceryCategory.OTHER) }
     var showCategoryDropdown by remember { mutableStateOf(false) }
 
+    // Track the newly added item for highlighting
+    var highlightedItemId by remember { mutableStateOf<String?>(null) }
+
+    // List state for scroll control
+    val listState = rememberLazyListState()
+
     // State for confirmation dialog
     var showClearConfirmation by remember { mutableStateOf(false) }
 
@@ -141,6 +150,109 @@ fun ShoppingListScreen(
     fun updateGroceryItems(newList: List<GroceryItem>) {
         groceryItems = newList
         repository.saveGroceryItems(newList)
+    }
+
+    // Function to find position and scroll to a specific item
+    suspend fun findPositionAndScrollToItem(
+        items: List<GroceryItem>,
+        itemId: String,
+        listState: LazyListState
+    ) {
+        // Find the target item
+        val targetItem = items.find { it.id == itemId } ?: return
+
+        // Group by category to understand list structure
+        val groupedItems = items.groupBy { it.category }
+            .mapValues { (_, categoryItems) ->
+                categoryItems.sortedBy { it.isChecked }
+            }
+            .toSortedMap(compareBy { it.ordinal })
+
+        // Calculate index in the LazyColumn (including headers)
+        var index = 0
+
+        // Iterate through categories that come before our target
+        for ((category, categoryItems) in groupedItems) {
+            if (categoryItems.isEmpty()) continue
+
+            // Add 1 for category header
+            index++
+
+            if (category == targetItem.category) {
+                // Find position within this category
+                for (item in categoryItems) {
+                    if (item.id == itemId) {
+                        // Found it! Scroll to this index
+                        listState.animateScrollToItem(index)
+                        return
+                    }
+                    index++
+                }
+            } else {
+                // Skip all items in this category
+                index += categoryItems.size
+            }
+        }
+    }
+
+    // Function to add a new grocery item
+    fun addGroceryItem(itemName: String, category: GroceryCategory? = null) {
+        if (itemName.isBlank()) return
+
+        // Auto-categorize if no category specified
+        val itemCategory = category ?: GrocerySuggestions.guessCategory(itemName)
+
+        val newItem = GroceryItem(
+            name = itemName.trim(),
+            category = itemCategory
+        )
+
+        // Add item to the list
+        updateGroceryItems(groceryItems + newItem)
+        newItemName = "" // Clear input field
+        selectedCategory = GroceryCategory.OTHER // Reset category
+        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+
+        // Set the highlighted item ID
+        highlightedItemId = newItem.id
+
+        // Schedule to clear highlight after delay
+        scope.launch {
+            delay(2000) // 2 seconds
+            highlightedItemId = null
+        }
+
+        // Find position and scroll to the newly added item
+        scope.launch {
+            findPositionAndScrollToItem(groceryItems, newItem.id, listState)
+        }
+
+        scope.launch {
+            snackbarHostState.showSnackbar("Added ${newItem.name}")
+        }
+    }
+
+    // Function for item deletion with proper undo
+    fun deleteGroceryItem(itemToDelete: GroceryItem) {
+        // Save the current list before deletion for undo functionality
+        val originalList = groceryItems.toList()
+
+        // Remove the item from the list
+        val updatedList = groceryItems.filter { it.id != itemToDelete.id }
+        updateGroceryItems(updatedList)
+
+        // Show snackbar with undo option
+        scope.launch {
+            val result = snackbarHostState.showSnackbar(
+                message = "Item deleted",
+                actionLabel = "Undo",
+                duration = SnackbarDuration.Short
+            )
+            if (result == SnackbarResult.ActionPerformed) {
+                // Restore the original list that includes the deleted item
+                updateGroceryItems(originalList)
+            }
+        }
     }
 
     // Clear confirmation dialog with MD3 styling
@@ -181,7 +293,7 @@ fun ShoppingListScreen(
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        text = stringResource(R.string.app_title),
+                        text = "Your Shopping List",
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -249,39 +361,7 @@ fun ShoppingListScreen(
                 )
             )
         },
-        snackbarHost = { SnackbarHost(snackbarHostState) },
-        floatingActionButton = {
-            ExtendedFloatingActionButton(
-                onClick = {
-                    if (newItemName.isNotBlank()) {
-                        // Auto-categorize if using default category
-                        val category = if (selectedCategory == GroceryCategory.OTHER) {
-                            guessCategory(newItemName)
-                        } else {
-                            selectedCategory
-                        }
-
-                        val newItem = GroceryItem(
-                            name = newItemName.trim(),
-                            category = category
-                        )
-                        updateGroceryItems(groceryItems + newItem)
-                        newItemName = ""
-                        selectedCategory = GroceryCategory.OTHER // Reset category
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-
-                        scope.launch {
-                            snackbarHostState.showSnackbar("Added ${newItem.name}")
-                        }
-                    }
-                },
-                icon = { Icon(Icons.Default.Add, "Add Item") },
-                text = { Text("Add Item") },
-                expanded = newItemName.isNotBlank(),
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-            )
-        }
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -289,74 +369,7 @@ fun ShoppingListScreen(
                 .padding(horizontal = 16.dp)
                 .fillMaxSize()
         ) {
-            // Empty state
-            if (groceryItems.isEmpty()) {
-                EmptyListPlaceholder(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxWidth()
-                )
-            } else {
-                // Group items by category and always sort within each category
-                // Unchecked items first, then checked items
-                val groupedItems = groceryItems.groupBy { it.category }
-                    .mapValues { (_, items) ->
-                        // Always sort so unchecked items are first
-                        items.sortedBy { it.isChecked }
-                    }
-                    .toSortedMap(compareBy { it.ordinal })
-
-                // List of grocery items grouped by category
-                LazyColumn(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxWidth(),
-                    contentPadding = PaddingValues(vertical = 8.dp)
-                ) {
-                    groupedItems.forEach { (category, items) ->
-                        // Only show categories that have items
-                        if (items.isNotEmpty()) {
-                            // Category header
-                            item {
-                                CategoryHeader(category)
-                            }
-
-                            // Items in this category
-                            items(
-                                items = items,
-                                key = { it.id } // Use stable ID for animations
-                            ) { item ->
-                                GroceryItemRow(
-                                    item = item,
-                                    onCheckChange = { isChecked ->
-                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                        val updatedList = groceryItems.map {
-                                            if (it.id == item.id) it.copy(isChecked = isChecked) else it
-                                        }
-                                        updateGroceryItems(updatedList)
-                                    },
-                                    onDelete = {
-                                        val updatedList = groceryItems.filter { it.id != item.id }
-                                        updateGroceryItems(updatedList)
-                                        scope.launch {
-                                            val result = snackbarHostState.showSnackbar(
-                                                message = "Item deleted",
-                                                actionLabel = "Undo",
-                                                duration = SnackbarDuration.Short
-                                            )
-                                            if (result == SnackbarResult.ActionPerformed) {
-                                                updateGroceryItems(groceryItems) // Restore the list
-                                            }
-                                        }
-                                    }
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Add new item section - now more compact with the FAB handling the add action
+            // Add item input at the top
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -409,8 +422,101 @@ fun ShoppingListScreen(
                         colors = TextFieldDefaults.colors(
                             focusedIndicatorColor = MaterialTheme.colorScheme.primary,
                             unfocusedIndicatorColor = MaterialTheme.colorScheme.outline
-                        )
+                        ),
+                        trailingIcon = {
+                            if (newItemName.isNotBlank()) {
+                                IconButton(onClick = { addGroceryItem(newItemName, selectedCategory) }) {
+                                    Icon(
+                                        imageVector = Icons.Default.Add,
+                                        contentDescription = "Add Item",
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                            }
+                        }
                     )
+
+                    // Suggestions row
+                    val suggestions = remember(newItemName, groceryItems) {
+                        GrocerySuggestions.generateSuggestions(newItemName, groceryItems)
+                    }
+
+                    if (suggestions.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        LazyRow(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            items(suggestions) { suggestion ->
+                                SuggestionChip(
+                                    onClick = { addGroceryItem(suggestion) },
+                                    label = { Text(suggestion) },
+                                    colors = SuggestionChipDefaults.suggestionChipColors(
+                                        containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.7f)
+                                    )
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Empty state
+            if (groceryItems.isEmpty()) {
+                EmptyListPlaceholder(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                )
+            } else {
+                // Group items by category and always sort within each category
+                val groupedItems = groceryItems.groupBy { it.category }
+                    .mapValues { (_, items) ->
+                        items.sortedBy { it.isChecked }
+                    }
+                    .toSortedMap(compareBy { it.ordinal })
+
+                // List of grocery items grouped by category
+                LazyColumn(
+                    state = listState,
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth(),
+                    contentPadding = PaddingValues(vertical = 8.dp)
+                ) {
+                    groupedItems.forEach { (category, items) ->
+                        // Only show categories that have items
+                        if (items.isNotEmpty()) {
+                            // Category header
+                            item {
+                                CategoryHeader(category)
+                            }
+
+                            // Items in this category
+                            items(
+                                items = items,
+                                key = { it.id } // Use stable ID for animations
+                            ) { item ->
+                                // Add highlight animation for newly added items
+                                val isHighlighted = item.id == highlightedItemId
+                                GroceryItemRow(
+                                    item = item,
+                                    isHighlighted = isHighlighted,
+                                    onCheckChange = { isChecked ->
+                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                        val updatedList = groceryItems.map {
+                                            if (it.id == item.id) it.copy(isChecked = isChecked) else it
+                                        }
+                                        updateGroceryItems(updatedList)
+                                    },
+                                    onDelete = {
+                                        deleteGroceryItem(item)
+                                    }
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -420,6 +526,88 @@ fun ShoppingListScreen(
 @Composable
 fun GroceryItemRow(
     item: GroceryItem,
+    isHighlighted: Boolean = false,
+    onCheckChange: (Boolean) -> Unit,
+    onDelete: () -> Unit
+) {
+    // Only enable swipe-to-dismiss for unchecked items
+    if (item.isChecked) {
+        // For checked items, use a simpler card without swipe behavior
+        CheckedItemCard(item, isHighlighted, onCheckChange, onDelete)
+    } else {
+        // For unchecked items, use swipe-to-dismiss
+        SwipeableItemCard(item, isHighlighted, onCheckChange, onDelete)
+    }
+}
+
+@Composable
+private fun CheckedItemCard(
+    item: GroceryItem,
+    isHighlighted: Boolean,
+    onCheckChange: (Boolean) -> Unit,
+    onDelete: () -> Unit
+) {
+    // Animation for highlighting
+    val backgroundColor by animateColorAsState(
+        targetValue = when {
+            isHighlighted -> MaterialTheme.colorScheme.primaryContainer
+            else -> MaterialTheme.colorScheme.surfaceVariant
+        },
+        animationSpec = tween(durationMillis = 500),
+        label = "Background color animation"
+    )
+
+    // No swipe behavior, just a regular card with dynamic background
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = backgroundColor
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Checkbox(
+                checked = true, // Always checked in this component
+                onCheckedChange = onCheckChange,
+                colors = CheckboxDefaults.colors(
+                    checkedColor = MaterialTheme.colorScheme.primary,
+                    uncheckedColor = MaterialTheme.colorScheme.outline
+                )
+            )
+
+            Text(
+                text = item.name,
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 8.dp),
+                style = MaterialTheme.typography.bodyLarge,
+                textDecoration = TextDecoration.LineThrough,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+            )
+
+            IconButton(onClick = onDelete) {
+                Icon(
+                    Icons.Default.Delete,
+                    contentDescription = "Delete item",
+                    tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f)
+                )
+            }
+        }
+    }
+}
+
+
+@Composable
+private fun SwipeableItemCard(
+    item: GroceryItem,
+    isHighlighted: Boolean,
     onCheckChange: (Boolean) -> Unit,
     onDelete: () -> Unit
 ) {
@@ -432,6 +620,16 @@ fun GroceryItemRow(
                 false
             }
         }
+    )
+
+    // Animation for highlighting
+    val backgroundColor by animateColorAsState(
+        targetValue = when {
+            isHighlighted -> MaterialTheme.colorScheme.primaryContainer
+            else -> MaterialTheme.colorScheme.surface
+        },
+        animationSpec = tween(durationMillis = 500),
+        label = "Background color animation"
     )
 
     SwipeToDismissBox(
@@ -453,22 +651,13 @@ fun GroceryItemRow(
             }
         },
         content = {
-            val elevation by animateDpAsState(
-                targetValue = if (item.isChecked) 0.dp else 2.dp,
-                animationSpec = tween(durationMillis = 300),
-                label = "Card elevation animation"
-            )
-
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 4.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = elevation),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = if (item.isChecked)
-                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f)
-                    else
-                        MaterialTheme.colorScheme.surface
+                    containerColor = backgroundColor
                 )
             ) {
                 Row(
@@ -478,7 +667,7 @@ fun GroceryItemRow(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Checkbox(
-                        checked = item.isChecked,
+                        checked = false, // Always unchecked in this component
                         onCheckedChange = onCheckChange,
                         colors = CheckboxDefaults.colors(
                             checkedColor = MaterialTheme.colorScheme.primary,
@@ -492,11 +681,7 @@ fun GroceryItemRow(
                             .weight(1f)
                             .padding(horizontal = 8.dp),
                         style = MaterialTheme.typography.bodyLarge,
-                        textDecoration = if (item.isChecked) TextDecoration.LineThrough else TextDecoration.None,
-                        color = if (item.isChecked)
-                            MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
-                        else
-                            MaterialTheme.colorScheme.onSurface
+                        color = MaterialTheme.colorScheme.onSurface
                     )
 
                     IconButton(onClick = onDelete) {
@@ -522,11 +707,11 @@ fun CategoryHeader(category: GroceryCategory) {
         GroceryCategory.BAKERY -> Icons.Outlined.ShoppingCart
         GroceryCategory.FROZEN -> Icons.Outlined.ShoppingCart
         GroceryCategory.CANNED -> Icons.Outlined.ShoppingCart
-        GroceryCategory.DRY_GOODS -> Icons.Outlined.ShoppingCart  // Changed from DRY to DRY_GOODS
+        GroceryCategory.DRY_GOODS -> Icons.Outlined.ShoppingCart
         GroceryCategory.BEVERAGES -> Icons.Outlined.ShoppingCart
         GroceryCategory.SNACKS -> Icons.Outlined.ShoppingCart
         GroceryCategory.HOUSEHOLD -> Icons.Outlined.ShoppingCart
-        GroceryCategory.PERSONAL_CARE -> Icons.Outlined.ShoppingCart  // Added missing category
+        GroceryCategory.PERSONAL_CARE -> Icons.Outlined.ShoppingCart
         GroceryCategory.OTHER -> Icons.Outlined.ShoppingCart
     }
 
