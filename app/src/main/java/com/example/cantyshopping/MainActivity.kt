@@ -153,7 +153,7 @@ fun ShoppingListScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("CantyShopping") },
+                title = { Text("Your Shopping List") },
                 actions = {
                     // Menu with import, export, and clear options
                     Box {
