@@ -6,6 +6,7 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -34,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.ui.platform.LocalFocusManager
 import kotlinx.coroutines.delay
 import com.example.cantyshopping.ui.theme.YourShoppingListTheme
 import kotlinx.coroutines.launch
@@ -120,6 +122,7 @@ fun ShoppingListScreen(
 ) {
     val haptic = LocalHapticFeedback.current
     val scope = rememberCoroutineScope()
+    val focusManager = LocalFocusManager.current // Get focus manager at Composable level
 
     // State to hold our shopping list - initialize from repository
     var groceryItems by remember { mutableStateOf(repository.getGroceryItems()) }
@@ -182,8 +185,11 @@ fun ShoppingListScreen(
                 // Find position within this category
                 for (item in categoryItems) {
                     if (item.id == itemId) {
-                        // Found it! Scroll to this index
-                        listState.animateScrollToItem(index)
+                        // Found it! Scroll to this index with better positioning
+                        listState.animateScrollToItem(
+                            index = index,
+                            scrollOffset = 100 // Position item with some space at the top
+                        )
                         return
                     }
                     index++
@@ -216,16 +222,21 @@ fun ShoppingListScreen(
         // Set the highlighted item ID
         highlightedItemId = newItem.id
 
-        // Schedule to clear highlight after delay
+        // Improved focus behavior:
         scope.launch {
-            delay(2000) // 2 seconds
+            // Give time for the list to update with the new item
+            delay(100)
+
+            // Find position and scroll to the new item - with better alignment
+            findPositionAndScrollToItem(groceryItems, newItem.id, listState)
+
+            // Keep the highlight a bit longer to ensure user sees it
+            delay(2500) // 2.5 seconds instead of 2
             highlightedItemId = null
         }
 
-        // Find position and scroll to the newly added item
-        scope.launch {
-            findPositionAndScrollToItem(groceryItems, newItem.id, listState)
-        }
+        // Clear keyboard focus
+        focusManager.clearFocus()
 
         scope.launch {
             snackbarHostState.showSnackbar("Added ${newItem.name}")
@@ -547,22 +558,28 @@ private fun CheckedItemCard(
     onCheckChange: (Boolean) -> Unit,
     onDelete: () -> Unit
 ) {
-    // Animation for highlighting
+    // Enhanced animation for highlighting
     val backgroundColor by animateColorAsState(
         targetValue = when {
-            isHighlighted -> MaterialTheme.colorScheme.primaryContainer
+            isHighlighted -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.9f)
             else -> MaterialTheme.colorScheme.surfaceVariant
         },
         animationSpec = tween(durationMillis = 500),
         label = "Background color animation"
     )
 
-    // No swipe behavior, just a regular card with dynamic background
+    // Add a subtle elevation animation when highlighted
+    val elevation by animateDpAsState(
+        targetValue = if (isHighlighted) 6.dp else 0.dp,
+        animationSpec = tween(durationMillis = 500),
+        label = "Elevation animation"
+    )
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = elevation),
         colors = CardDefaults.cardColors(
             containerColor = backgroundColor
         )
@@ -603,7 +620,6 @@ private fun CheckedItemCard(
     }
 }
 
-
 @Composable
 private fun SwipeableItemCard(
     item: GroceryItem,
@@ -622,14 +638,21 @@ private fun SwipeableItemCard(
         }
     )
 
-    // Animation for highlighting
+    // Enhanced animation for highlighting
     val backgroundColor by animateColorAsState(
         targetValue = when {
-            isHighlighted -> MaterialTheme.colorScheme.primaryContainer
+            isHighlighted -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.9f)
             else -> MaterialTheme.colorScheme.surface
         },
         animationSpec = tween(durationMillis = 500),
         label = "Background color animation"
+    )
+
+    // Add a subtle elevation animation when highlighted
+    val elevation by animateDpAsState(
+        targetValue = if (isHighlighted) 8.dp else 2.dp,
+        animationSpec = tween(durationMillis = 500),
+        label = "Elevation animation"
     )
 
     SwipeToDismissBox(
@@ -655,7 +678,7 @@ private fun SwipeableItemCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 4.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = elevation),
                 colors = CardDefaults.cardColors(
                     containerColor = backgroundColor
                 )
@@ -703,6 +726,7 @@ fun CategoryHeader(category: GroceryCategory) {
     val categoryIcon: ImageVector = when (category) {
         GroceryCategory.PRODUCE -> Icons.Outlined.ShoppingCart
         GroceryCategory.DAIRY -> Icons.Outlined.ShoppingCart
+        GroceryCategory.DELI -> Icons.Outlined.ShoppingCart  // Add this line for the new DELI category
         GroceryCategory.MEAT -> Icons.Outlined.ShoppingCart
         GroceryCategory.BAKERY -> Icons.Outlined.ShoppingCart
         GroceryCategory.FROZEN -> Icons.Outlined.ShoppingCart

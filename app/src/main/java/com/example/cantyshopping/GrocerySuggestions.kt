@@ -29,10 +29,7 @@ object GrocerySuggestions {
 
             // Fresh Herbs
             "basil", "bay leaf", "chive", "cilantro", "dill", "mint", "oregano", "parsley",
-            "rosemary", "sage", "tarragon", "thyme",
-
-            // Misc Produce
-            "alfalfa sprout", "microgreen", "tofu", "tempeh", "edamame", "hummus"
+            "rosemary", "sage", "tarragon", "thyme"
         ),
 
         GroceryCategory.DAIRY to listOf(
@@ -63,19 +60,34 @@ object GrocerySuggestions {
             "eggs", "egg whites", "egg substitute", "free-range eggs", "organic eggs",
             "quail eggs", "duck eggs",
 
-            // Other
-            "whipped cream", "coffee creamer"
+            // Refrigerated Items (moved from other categories)
+            "tofu", "tempeh", "refrigerated dough", "crescent roll dough", "cookie dough",
+            "pie crust", "refrigerated biscuit", "refrigerated pizza dough"
+        ),
+
+        GroceryCategory.DELI to listOf(
+            // Deli Meats
+            "deli meat", "sliced turkey", "sliced ham", "roast beef", "pastrami", "salami",
+            "pepperoni", "bologna", "liverwurst", "mortadella", "chorizo", "prosciutto",
+
+            // Prepared Foods
+            "hummus", "guacamole", "prepared salad", "coleslaw", "potato salad", "pasta salad",
+            "deli salad", "prepared sandwich", "rotisserie chicken", "prepared soup",
+            "prepared meal", "sushi", "poke", "dip", "tzatziki", "baba ganoush",
+
+            // Refrigerated Items
+            "fresh salsa", "refrigerated dip", "premade sandwich", "lunch kit"
         ),
 
         GroceryCategory.MEAT to listOf(
             // Beef
             "beef", "ground beef", "steak", "ribeye", "sirloin", "filet mignon", "chuck roast",
             "brisket", "short rib", "flank steak", "skirt steak", "beef tenderloin",
-            "beef stew meat", "corned beef", "beef jerky",
+            "beef stew meat", "corned beef",
 
             // Pork
             "pork", "pork chop", "bacon", "ham", "pork loin", "pork tenderloin", "pork shoulder",
-            "pork belly", "ground pork", "pork sausage", "prosciutto", "pancetta", "pork rib",
+            "pork belly", "ground pork", "pork sausage", "pork rib",
 
             // Poultry
             "chicken", "chicken breast", "chicken thigh", "chicken wing", "chicken leg",
@@ -86,18 +98,17 @@ object GrocerySuggestions {
             // Lamb
             "lamb", "lamb chop", "ground lamb", "lamb shank", "rack of lamb",
 
-            // Fish & Seafood
+            // Fresh Fish & Seafood
             "fish", "salmon", "tuna", "cod", "halibut", "tilapia", "mahi mahi", "trout",
-            "sea bass", "catfish", "sardine", "anchovies", "swordfish", "mackerel",
+            "sea bass", "catfish", "sardine", "swordfish", "mackerel",
             "shrimp", "crab", "lobster", "scallop", "clam", "mussel", "oyster", "squid",
             "octopus",
 
-            // Deli Meats
-            "deli meat", "sliced turkey", "sliced ham", "roast beef", "pastrami", "salami",
-            "pepperoni", "bologna", "liverwurst", "mortadella", "chorizo", "hot dog",
-            "bratwurst", "kielbasa", "sausage", "summer sausage",
+            // Sausages & Hot Dogs
+            "hot dog", "bratwurst", "kielbasa", "sausage", "summer sausage", "italian sausage",
+            "breakfast sausage", "andouille sausage",
 
-            // Plant-Based
+            // Plant-Based (Fresh)
             "veggie burger", "plant-based meat", "beyond meat", "impossible meat", "seitan",
             "veggie sausage", "plant-based chicken", "plant-based ground"
         ),
@@ -107,26 +118,23 @@ object GrocerySuggestions {
             "bread", "white bread", "wheat bread", "whole grain bread", "multigrain bread",
             "sourdough bread", "rye bread", "pumpernickel", "french bread", "italian bread",
             "ciabatta", "brioche", "challah", "focaccia", "garlic bread", "gluten-free bread",
-            "flatbread", "pita", "naan", "tortilla", "lavash", "english muffin", "bagel",
+            "flatbread", "pita", "naan", "english muffin", "bagel",
             "baguette", "croissant", "breadstick", "bread roll", "kaiser roll", "hamburger bun",
             "hot dog bun", "dinner roll", "sandwich roll",
 
             // Sweet Baked Goods
             "muffin", "scone", "donut", "pastry", "danish", "cinnamon roll", "coffee cake",
-            "pound cake", "angel food cake", "cheesecake", "cake", "cupcake", "brownie",
+            "pound cake", "angel food cake", "cake", "cupcake", "brownie",
             "cookie", "pie", "tart", "strudel", "baklava", "eclair", "macaroon", "cannoli",
 
-            // Crackers & Crisps
-            "cracker", "graham cracker", "saltine", "rice cake", "pita chip", "breadcrumb",
-
-            // Tortillas & Wraps
-            "corn tortilla", "flour tortilla", "spinach wrap", "whole wheat wrap"
+            // Tortillas & Wraps (moved from Bakery)
+            "tortilla", "corn tortilla", "flour tortilla", "spinach wrap", "whole wheat wrap"
         ),
 
         GroceryCategory.FROZEN to listOf(
             // Frozen Meals
             "frozen meal", "frozen dinner", "tv dinner", "frozen pizza", "frozen burrito",
-            "frozen lasagna", "frozen pasta", "frozen stir fry", "frozen pot pie", "frozen soup",
+            "frozen lasagna", "frozen pasta dish", "frozen stir fry", "frozen pot pie", "frozen soup",
             "hot pocket", "frozen sandwich", "frozen breakfast sandwich",
 
             // Frozen Vegetables
@@ -170,12 +178,12 @@ object GrocerySuggestions {
             // Canned Protein
             "canned tuna", "canned salmon", "canned sardine", "canned chicken", "canned ham",
             "spam", "canned crab", "canned clam", "canned shrimp", "canned oyster",
-            "canned anchovy", "canned vienna sausage",
+            "canned anchovy", "canned vienna sausage", "beef jerky",
 
             // Canned Beans & Legumes
             "canned bean", "canned black bean", "canned kidney bean", "canned pinto bean",
             "canned chickpea", "canned lentil", "canned refried bean", "canned baked bean",
-            "canned lima bean", "canned navy bean", "canned cannellini bean", "canned hummus",
+            "canned lima bean", "canned navy bean", "canned cannellini bean",
 
             // Canned Soup & Broth
             "canned soup", "tomato soup", "chicken noodle soup", "clam chowder", "beef stew",
@@ -190,19 +198,20 @@ object GrocerySuggestions {
             // Canned Other
             "canned olive", "canned jalapeño", "canned green chile", "canned pickle",
             "canned sauerkraut", "canned gravy", "creamed corn", "condensed milk",
-            "evaporated milk", "coconut milk", "coconut cream", "pie filling"
+            "evaporated milk", "canned coconut milk", "coconut cream", "pie filling"
         ),
 
         GroceryCategory.DRY_GOODS to listOf(
-            // Pasta & Noodles
+            // Pasta & Noodles - moved all pasta here from FROZEN
             "pasta", "spaghetti", "fettuccine", "linguine", "penne", "rigatoni", "rotini",
-            "macaroni", "lasagna", "egg noodle", "ramen", "udon", "soba", "rice noodle",
-            "couscous", "orzo", "gnocchi",
+            "macaroni", "lasagna noodle", "egg noodle", "ramen", "udon", "soba", "rice noodle",
+            "couscous", "orzo", "gnocchi", "angel hair pasta", "elbow macaroni", "bow tie pasta",
+            "shell pasta", "ziti", "pastina",
 
             // Rice & Grains
             "rice", "white rice", "brown rice", "jasmine rice", "basmati rice", "wild rice",
             "arborio rice", "instant rice", "rice pilaf", "quinoa", "barley", "bulgur",
-            "farro", "millet", "wheat berries", "polenta", "grits",
+            "farro", "millet", "wheat berries", "polenta", "grits", "oats", "steel cut oats",
 
             // Cereal & Breakfast
             "cereal", "oatmeal", "cream of wheat", "granola", "muesli", "corn flakes",
@@ -236,9 +245,8 @@ object GrocerySuggestions {
             "ketchup", "mustard", "mayonnaise", "relish", "hot sauce", "bbq sauce",
             "worcestershire sauce", "soy sauce", "teriyaki sauce", "fish sauce", "oyster sauce",
             "hoisin sauce", "sriracha", "peanut sauce", "cocktail sauce", "tartar sauce",
-            "hummus", "salsa", "taco sauce", "enchilada sauce", "chutney", "horseradish",
-            "pesto", "tomato paste", "tomato puree", "tomato sauce", "pasta sauce", "marinara",
-            "alfredo sauce", "stir-fry sauce", "gravy mix", "sauce mix",
+            "salsa", "taco sauce", "enchilada sauce", "chutney", "horseradish",
+            "pesto", "tomato paste", "tomato puree", "stir-fry sauce", "gravy mix", "sauce mix",
 
             // Beans, Legumes & Nuts
             "dry bean", "lentil", "split pea", "chickpea", "black bean", "kidney bean",
@@ -251,17 +259,16 @@ object GrocerySuggestions {
             "dried fig", "prune", "dried mango", "dried banana", "sun-dried tomato",
             "dried mushroom", "seaweed", "fruit leather",
 
-            // Canned Food Ingredients
+            // Broth & Bouillon
             "broth", "bouillon", "soup mix",
 
             // Dessert & Baking Mixes
-            "cake mix", "brownie mix", "cookie mix", "frosting", "pie crust", "jello",
-            "pudding mix", "gelatin", "marshmallow", "chocolate syrup", "caramel sauce",
+            "cake mix", "brownie mix", "cookie mix", "frosting", "pie crust mix", "jello",
+            "pudding mix", "gelatin", "chocolate syrup", "caramel sauce",
 
             // International Food Ingredients
-            "salsa", "taco shell", "taco seasoning", "enchilada sauce", "refried bean",
-            "tortilla chip", "sushi rice", "wasabi", "nori", "curry paste", "curry sauce",
-            "coconut milk", "coconut cream", "sriracha", "chili oil", "fish sauce",
+            "taco shell", "taco seasoning", "tortilla chip", "sushi rice", "wasabi", "nori",
+            "curry paste", "curry sauce", "coconut milk", "coconut cream", "chili oil",
             "rice paper", "spring roll wrapper", "wonton wrapper", "dumpling wrapper",
             "miso paste", "gochujang", "kimchi", "sauerkraut"
         ),
@@ -286,9 +293,10 @@ object GrocerySuggestions {
             "k cup", "cold brew", "espresso", "tea", "black tea", "green tea", "herbal tea",
             "chamomile tea", "earl grey", "chai tea", "iced tea", "tea bag", "loose leaf tea",
 
-            // Milk & Non-Dairy Drinks
-            "milk", "chocolate milk", "almond milk", "soy milk", "oat milk", "coconut milk",
-            "rice milk", "cashew milk", "hemp milk", "lactose-free milk", "buttermilk", "kefir",
+            // Non-Dairy Drinks (shelf-stable)
+            "shelf-stable milk", "shelf-stable almond milk", "shelf-stable soy milk",
+            "shelf-stable oat milk", "shelf-stable coconut milk", "shelf-stable rice milk",
+            "shelf-stable cashew milk", "shelf-stable hemp milk",
 
             // Sports & Energy Drinks
             "energy drink", "red bull", "monster", "sports drink", "gatorade", "powerade",
@@ -327,7 +335,7 @@ object GrocerySuggestions {
             "cookie", "oreo", "chocolate chip cookie", "candy", "chocolate", "gummy", "licorice",
             "hard candy", "lollipop", "mint", "gum", "jelly bean", "m&m", "skittles",
             "starburst", "twizzler", "snickers", "kit kat", "hershey", "reese", "chocolate bar",
-            "brownie", "brownie bite", "cake", "cupcake", "muffin", "donut", "pastry",
+            "brownie", "brownie bite",
 
             // Granola & Cereal Bars
             "granola bar", "protein bar", "cereal bar", "breakfast bar", "energy bar",
@@ -337,12 +345,12 @@ object GrocerySuggestions {
             // Dried Fruit & Fruit Snacks
             "dried fruit", "raisin", "craisin", "dried cranberry", "dried apricot",
             "dried mango", "banana chip", "fruit roll-up", "fruit snack", "fruit leather",
-            "fruit strip", "fruit by the foot", "apple sauce", "fruit cup",
+            "fruit strip", "fruit by the foot", "fruit cup",
 
             // Savory Snacks
             "jerky", "beef jerky", "turkey jerky", "meat stick", "slim jim", "cheese stick",
-            "string cheese", "babybel", "laughing cow", "cracker and cheese", "hummus",
-            "guacamole", "salsa", "dip", "bean dip", "onion dip", "french onion dip",
+            "string cheese", "babybel", "laughing cow", "cracker and cheese",
+            "bean dip", "onion dip", "french onion dip",
             "veggie straw", "cheese cracker", "snack mix", "chex mix", "gardetto", "nut thins",
 
             // Popcorn
@@ -488,7 +496,15 @@ object GrocerySuggestions {
             "pregnancy test"
         ),
 
-        GroceryCategory.OTHER to listOf()
+        GroceryCategory.OTHER to listOf(
+            // Items that don't fit elsewhere
+            "specialty item", "seasonal item", "holiday item", "gift card",
+            "lottery ticket", "prepaid card", "magazine", "newspaper", "greeting card",
+            "party supply", "balloon", "gift bag", "wrapping paper", "birthday candle",
+            "floral arrangement", "plant", "flower", "potting soil", "plant food",
+            "pet food", "cat food", "dog food", "pet treat", "pet toy", "cat litter",
+            "aquarium supply", "bird seed", "small animal bedding"
+        )
     )
 
     /**
@@ -497,7 +513,25 @@ object GrocerySuggestions {
     fun guessCategory(itemName: String): GroceryCategory {
         val lowercaseName = itemName.lowercase().trim()
 
-        // Check each category's keywords for matches
+        // First pass: look for exact matches
+        categoryKeywords.forEach { (category, keywords) ->
+            if (keywords.contains(lowercaseName)) {
+                return category
+            }
+        }
+
+        // Second pass: look for word boundary matches (complete words)
+        categoryKeywords.forEach { (category, keywords) ->
+            for (keyword in keywords) {
+                // Split the keyword into words
+                val keywordWords = keyword.split(" ")
+                if (keywordWords.contains(lowercaseName) || lowercaseName.split(" ").contains(keyword)) {
+                    return category
+                }
+            }
+        }
+
+        // Third pass: fall back to substring matching
         categoryKeywords.forEach { (category, keywords) ->
             for (keyword in keywords) {
                 if (lowercaseName.contains(keyword) || keyword.contains(lowercaseName)) {
