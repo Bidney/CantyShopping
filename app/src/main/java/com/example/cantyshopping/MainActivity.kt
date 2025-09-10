@@ -627,17 +627,6 @@ private fun SwipeableItemCard(
     onCheckChange: (Boolean) -> Unit,
     onDelete: () -> Unit
 ) {
-    val dismissState = rememberSwipeToDismissBoxState(
-        confirmValueChange = { dismissValue ->
-            if (dismissValue == SwipeToDismissBoxValue.EndToStart) {
-                onDelete()
-                true
-            } else {
-                false
-            }
-        }
-    )
-
     // Enhanced animation for highlighting
     val backgroundColor by animateColorAsState(
         targetValue = when {
@@ -655,69 +644,50 @@ private fun SwipeableItemCard(
         label = "Elevation animation"
     )
 
-    SwipeToDismissBox(
-        state = dismissState,
-        backgroundContent = {
-            Box(
+    // Simple card without swipe functionality
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = elevation),
+        colors = CardDefaults.cardColors(
+            containerColor = backgroundColor
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Checkbox(
+                checked = false, // Always unchecked in this component
+                onCheckedChange = onCheckChange,
+                colors = CheckboxDefaults.colors(
+                    checkedColor = MaterialTheme.colorScheme.primary,
+                    uncheckedColor = MaterialTheme.colorScheme.outline
+                )
+            )
+
+            Text(
+                text = item.name,
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
-                    .background(MaterialTheme.colorScheme.errorContainer, shape = MaterialTheme.shapes.medium),
-                contentAlignment = Alignment.CenterEnd
-            ) {
+                    .weight(1f)
+                    .padding(horizontal = 8.dp),
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+
+            // Keep the delete button
+            IconButton(onClick = onDelete) {
                 Icon(
-                    imageVector = Icons.Default.Delete,
-                    contentDescription = "Delete",
-                    tint = MaterialTheme.colorScheme.onErrorContainer,
-                    modifier = Modifier.padding(end = 16.dp)
+                    Icons.Default.Delete,
+                    contentDescription = "Delete item",
+                    tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f)
                 )
-            }
-        },
-        content = {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 4.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = elevation),
-                colors = CardDefaults.cardColors(
-                    containerColor = backgroundColor
-                )
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Checkbox(
-                        checked = false, // Always unchecked in this component
-                        onCheckedChange = onCheckChange,
-                        colors = CheckboxDefaults.colors(
-                            checkedColor = MaterialTheme.colorScheme.primary,
-                            uncheckedColor = MaterialTheme.colorScheme.outline
-                        )
-                    )
-
-                    Text(
-                        text = item.name,
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(horizontal = 8.dp),
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-
-                    IconButton(onClick = onDelete) {
-                        Icon(
-                            Icons.Default.Delete,
-                            contentDescription = "Delete item",
-                            tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f)
-                        )
-                    }
-                }
             }
         }
-    )
+    }
 }
 
 @Composable
