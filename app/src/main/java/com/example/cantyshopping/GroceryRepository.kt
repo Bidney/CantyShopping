@@ -10,7 +10,7 @@ class GroceryRepository(private val context: Context) {
     private val sharedPreferences: SharedPreferences =
         context.getSharedPreferences("grocery_preferences", Context.MODE_PRIVATE)
 
-    private val GROCERY_LIST_KEY = "grocery_list"
+    private val grocerylistkey = "grocery_list"
 
     // Function to save grocery items
     fun saveGroceryItems(items: List<GroceryItem>) {
@@ -30,14 +30,14 @@ class GroceryRepository(private val context: Context) {
 
         // Save to SharedPreferences
         sharedPreferences.edit {
-            putString(GROCERY_LIST_KEY, jsonArray.toString())
+            putString(grocerylistkey, jsonArray.toString())
         }
     }
 
     // Function to get grocery items
     fun getGroceryItems(): List<GroceryItem> {
         // Get the JSON string from SharedPreferences
-        val jsonString = sharedPreferences.getString(GROCERY_LIST_KEY, "[]") ?: "[]"
+        val jsonString = sharedPreferences.getString(grocerylistkey, "[]") ?: "[]"
 
         return try {
             // Parse the JSON array
