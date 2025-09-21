@@ -1,4 +1,4 @@
-package com.example.cantyshopping
+package io.github.bidney.cantyshopping
 
 /**
  * Contains predefined grocery items organized by categories for suggestion and auto-categorization.

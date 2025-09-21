@@ -1,4 +1,4 @@
-package com.example.cantyshopping
+package io.github.bidney.cantyshopping
 
 import android.net.Uri
 import android.os.Bundle
@@ -37,7 +37,7 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.ui.platform.LocalFocusManager
 import kotlinx.coroutines.delay
-import com.example.cantyshopping.ui.theme.YourShoppingListTheme
+import io.github.bidney.cantyshopping.ui.theme.YourShoppingListTheme
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {

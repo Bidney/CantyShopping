@@ -1,4 +1,4 @@
-package com.example.cantyshopping
+package io.github.bidney.cantyshopping
 
 enum class GroceryCategory(val displayName: String) {
     PRODUCE("Produce"),
