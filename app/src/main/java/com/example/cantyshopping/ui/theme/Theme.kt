@@ -1,4 +1,4 @@
-package com.example.cantyshopping.ui.theme
+package io.github.bidney.cantyshopping.ui.theme
 
 import android.app.Activity
 import android.os.Build

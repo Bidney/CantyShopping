@@ -1,4 +1,4 @@
-package com.example.cantyshopping.ui.theme
+package io.github.bidney.cantyshopping.ui.theme
 
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Shapes

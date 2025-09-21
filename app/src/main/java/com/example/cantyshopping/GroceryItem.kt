@@ -1,4 +1,4 @@
-package com.example.cantyshopping
+package io.github.bidney.cantyshopping
 
 data class GroceryItem(
     val id: String = java.util.UUID.randomUUID().toString(),

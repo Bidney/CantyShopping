@@ -5,17 +5,16 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
 }
-
 android {
-    namespace = "com.example.cantyshopping"
+    namespace = "io.github.bidney.cantyshopping"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.example.cantyshopping"
+        applicationId = "io.github.bidney.cantyshopping"
         minSdk = 24
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 122
+        versionName = "1.2.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -41,6 +40,7 @@ android {
         compose = true
     }
 }
+
 
 dependencies {
 
