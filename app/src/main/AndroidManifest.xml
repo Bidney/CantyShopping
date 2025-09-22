@@ -20,6 +20,14 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <!-- Add this activity declaration inside your <application> tag in AndroidManifest.xml -->
+        <activity
+            android:name=".TermsActivity"
+            android:exported="false"
+            android:label="Terms of Service"
+            android:theme="@style/Theme.CantyShopping" />
+
+        <!-- Your existing MainActivity should already be there -->
     </application>
 
 </manifest>

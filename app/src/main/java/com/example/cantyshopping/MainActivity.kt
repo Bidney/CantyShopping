@@ -1,5 +1,7 @@
 package io.github.bidney.cantyshopping
 
+import android.content.Context
+import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.widget.Toast
@@ -68,14 +70,38 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    ShoppingListScreen(
-                        repository = repository,
-                        onExportList = { exportList() },
-                        onImportList = { importList() }
-                    )
+                    // Remember the current state and allow it to be updated
+                    var termsAccepted by remember { mutableStateOf(hasAcceptedTerms()) }
+
+                    // Check if terms have been accepted
+                    if (!termsAccepted) {
+                        TermsAcceptanceScreen(
+                            onTermsAccepted = {
+                                acceptTerms()
+                                termsAccepted = true // Update state to trigger recomposition
+                            },
+                            onViewTerms = { startActivity(Intent(this@MainActivity, TermsActivity::class.java)) }
+                        )
+                    } else {
+                        ShoppingListScreen(
+                            repository = repository,
+                            onExportList = { exportList() },
+                            onImportList = { importList() }
+                        )
+                    }
                 }
             }
         }
+    }
+
+    private fun hasAcceptedTerms(): Boolean {
+        val prefs = getSharedPreferences("app_preferences", Context.MODE_PRIVATE)
+        return prefs.getBoolean("terms_accepted", false)
+    }
+
+    private fun acceptTerms() {
+        val prefs = getSharedPreferences("app_preferences", Context.MODE_PRIVATE)
+        prefs.edit().putBoolean("terms_accepted", true).apply()
     }
 
     private fun exportList() {
@@ -113,6 +139,118 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+@Composable
+fun TermsAcceptanceScreen(
+    onTermsAccepted: () -> Unit,
+    onViewTerms: () -> Unit
+) {
+    var isChecked by remember { mutableStateOf(false) }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        // App logo/icon area
+        Icon(
+            imageVector = Icons.Outlined.ShoppingCart,
+            contentDescription = "App Icon",
+            modifier = Modifier.size(80.dp),
+            tint = MaterialTheme.colorScheme.primary
+        )
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        // Welcome text
+        Text(
+            text = "Welcome to Canty Shopping",
+            style = MaterialTheme.typography.headlineMedium,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Text(
+            text = "Your simple grocery shopping list app",
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+
+        Spacer(modifier = Modifier.height(48.dp))
+
+        // Terms acceptance card
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(20.dp)
+            ) {
+                Text(
+                    text = "Terms of Service",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Text(
+                    text = "Before you start using the app, please review and accept our terms of service.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Read Full Terms button
+                TextButton(
+                    onClick = onViewTerms,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "Read Full Terms of Service",
+                        style = MaterialTheme.typography.labelLarge
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Checkbox and agreement text
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Checkbox(
+                        checked = isChecked,
+                        onCheckedChange = { isChecked = it }
+                    )
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    Text(
+                        text = "I agree to the Terms of Service",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Continue button
+                Button(
+                    onClick = onTermsAccepted,
+                    enabled = isChecked,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Continue to App")
+                }
+            }
+        }
+    }
+}
+
+// Rest of your existing composables remain unchanged...
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ShoppingListScreen(
